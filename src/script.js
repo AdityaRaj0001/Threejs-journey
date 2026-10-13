@@ -11,9 +11,26 @@ const scene = new THREE.Scene()
 /**
  * Objects
  */
+// const mesh = new THREE.Mesh(
+//     new THREE.SphereGeometry(1, 32, 32),
+//     new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
+// )
+
+// Create an empty BufferGeometry
+const geometry = new THREE.BufferGeometry()
+// Create 50 triangles (450 values)
+const count = 50
+const positionsArray = new Float32Array(count * 3 * 3)
+for(let i = 0; i < count * 3 * 3; i++)
+{
+    positionsArray[i] = (Math.random() - 0.5) * 4
+}
+const positionsAttribute = new THREE.BufferAttribute(positionsArray, 3)
+geometry.setAttribute('position', positionsAttribute) //'position' as the name because Three.js internal shaders will look for that value to position the vertices
+
 const mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial({ color: 0xae0450 })
+    geometry,
+    new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
 )
 scene.add(mesh)
 
@@ -37,7 +54,7 @@ window.addEventListener('resize', () =>
 
     // Update renderer
     renderer.setSize(sizes.width, sizes.height)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)) //prevent the pixel ratio from going above 2, which can cause performance issues on some devices
 })
 
 window.addEventListener('dblclick', () =>
