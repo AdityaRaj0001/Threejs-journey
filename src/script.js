@@ -1,6 +1,29 @@
 import * as THREE from 'three'
 import './style.css'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import gsap from 'gsap'
+import GUI from 'lil-gui'
+
+/**
+ * Debug
+ */
+const gui = new GUI({
+     width: 300,
+    title: 'Creative web wooohoo',
+    closeFolders: false
+})
+const debugObject = {}
+debugObject.color = '#3a6ea6'
+const cubeTweaks = gui.addFolder('Awesome cube')
+// gui.close() //keep the folder closed by default
+gui.hide() //hide the GUI by default
+
+window.addEventListener('keydown', (event) =>
+{
+    if(event.key == 'h')
+        gui.show(gui._hidden)
+})
+
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -11,28 +34,51 @@ const scene = new THREE.Scene()
 /**
  * Objects
  */
-// const mesh = new THREE.Mesh(
-//     new THREE.SphereGeometry(1, 32, 32),
-//     new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
-// )
-
-// Create an empty BufferGeometry
-const geometry = new THREE.BufferGeometry()
-// Create 50 triangles (450 values)
-const count = 50
-const positionsArray = new Float32Array(count * 3 * 3)
-for(let i = 0; i < count * 3 * 3; i++)
-{
-    positionsArray[i] = (Math.random() - 0.5) * 4
-}
-const positionsAttribute = new THREE.BufferAttribute(positionsArray, 3)
-geometry.setAttribute('position', positionsAttribute) //'position' as the name because Three.js internal shaders will look for that value to position the vertices
-
+const material = new THREE.MeshBasicMaterial({ color: debugObject.color })
+const geometry = new THREE.BoxGeometry(1, 1, 1)
 const mesh = new THREE.Mesh(
     geometry,
-    new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
+    material
 )
 scene.add(mesh)
+
+cubeTweaks
+    .add(mesh.position, 'y')
+    .min(- 3)
+    .max(3)
+    .step(0.01)
+    .name('elevation')
+
+
+cubeTweaks.add(mesh,'visible').name('mesh visibility')
+cubeTweaks.add(material, 'wireframe')
+cubeTweaks.
+    addColor(debugObject, 'color')
+    .onChange(() =>
+    {
+        material.color.set(debugObject.color)
+    })
+
+debugObject.spin = () =>
+{
+    gsap.to(mesh.rotation, { duration: 1, y: mesh.rotation.y + Math.PI * 2 })
+}
+cubeTweaks.add(debugObject, 'spin')
+
+debugObject.subdivision = 2
+cubeTweaks
+    .add(debugObject, 'subdivision')
+    .min(1)
+    .max(20)
+    .step(1)
+    .onFinishChange(() =>
+    {
+        mesh.geometry.dispose()
+        mesh.geometry = new THREE.BoxGeometry(
+            1, 1, 1,
+            debugObject.subdivision, debugObject.subdivision, debugObject.subdivision
+        )
+    })
 
 /**
  * Sizes
@@ -57,7 +103,7 @@ window.addEventListener('resize', () =>
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)) //prevent the pixel ratio from going above 2, which can cause performance issues on some devices
 })
 
-window.addEventListener('dblclick', () =>
+canvas.addEventListener('dblclick', () =>
 {
     const fullscreenElement = document.fullscreenElement || document.webkitFullscreenElement
 
